@@ -4,7 +4,7 @@ using Oxygen
 const Ai4EJVA_VERSION = v"0.1.0"
 const Ai4EJVA_AUTHOR = "Ai4Energy Team"
 const CONFIG_ENV = "Ai4EJVA_CONFIG"
-const CONFIG_DEFAULT_FILE = "etc/Ai4EJVA.yaml"
+const CONFIG_DEFAULT_FILE = joinpath(@__DIR__, "..", "etc", "Ai4EJVA.yaml")
 const CONFIG_TEST_FILE = "etc/test.yml"
 const CONFIG_DEBUG_FILE = "etc/debug.yml"
 
@@ -22,81 +22,6 @@ Options:
 
 If no config file is specified, the default is Ai4EJVA.yaml.
 """
-
-function show_help()
-    println(HELP_INFO)
-end
-
-function show_version()
-    println("Ai4EJVA.jl version $Ai4EJVA_VERSION by $Ai4EJVA_AUTHOR")
-end
-
-function parse_args(args)
-    config = ""
-    show_help_flag = false
-    show_version_flag = false
-    i = 1
-    while i <= length(args)
-        arg = args[i]
-        if arg == "-c" || arg == "--config"
-            if i + 1 <= length(args)
-                config = args[i + 1]
-                i += 1
-            else
-                println("Error: --config option requires a value")
-                return nothing
-            end
-        elseif arg == "-v" || arg == "--version"
-            show_version_flag = true
-        elseif arg == "-h" || arg == "--help"
-            show_help_flag = true
-        else
-            println("Error: Unrecognized argument $arg")
-            return nothing
-        end
-        i += 1
-    end
-    return (config, show_help_flag, show_version_flag)
-end
-
-function julia_main()::Cint
-    args = ARGS
-    parsed_args = parse_args(args)
-
-    if parsed_args === nothing
-        return 1
-    end
-
-    config, show_help_flag, show_version_flag = parsed_args
-
-    if show_help_flag
-        show_help()
-        return 0
-    elseif show_version_flag
-        show_version()
-        return 0
-    end
-
-    if config == ""
-        config = get(ENV, CONFIG_ENV, CONFIG_DEFAULT_FILE)
-    end
-
-    println("Using configuration file: $config")
-
-    # try
-    #     # 读取配置文件
-    #     config = YAML.load_file(config_file)
-
-    #     # 启动你的应用
-    #     start_application(config)
-    # catch e
-    #     println("Error: ", e)
-    #     return 1
-    # end
-
-    return 0
-
-end
 
 struct JWTConfig
     signing_key::String
@@ -148,8 +73,6 @@ struct CORSConfig
     whitelist::Vector{CORSWhitelistConfig}
 end
 
-
-
 struct ServerConfig
     jwt::JWTConfig
     email::EmailConfig
@@ -163,8 +86,95 @@ mutable struct ServiceContext
     oxygencontext::Oxygen.Context
 end
 
-# 全局服务上下文变量
 const SVCCONTEXT = Ref{ServiceContext}()
+
+function show_help()
+    println(HELP_INFO)
+end
+
+function show_version()
+    println("Ai4EJVA.jl version $Ai4EJVA_VERSION by $Ai4EJVA_AUTHOR")
+end
+
+function parse_args(args)
+    config = ""
+    show_help_flag = false
+    show_version_flag = false
+    i = 1
+    while i <= length(args)
+        arg = args[i]
+        if arg == "-c" || arg == "--config"
+            if i + 1 <= length(args)
+                config = args[i + 1]
+                i += 1
+            else
+                println("Error: --config option requires a value")
+                return nothing
+            end
+        elseif arg == "-v" || arg == "--version"
+            show_version_flag = true
+        elseif arg == "-h" || arg == "--help"
+            show_help_flag = true
+        else
+            println("Error: Unrecognized argument $arg")
+            return nothing
+        end
+        i += 1
+    end
+    return (config, show_help_flag, show_version_flag)
+end
+
+function load_config(filename::String)
+    
+    config = YAML.load_file(filename)
+    # system_config = SystemConfig(
+    #     config["system"]["env"],
+    #     config["system"]["addr"],
+    #     config["system"]["db-type"],
+    #     config["system"]["use-redis"],
+    #     config["system"]["use-mongo"],
+    #     config["system"]["use-multipoint"],
+    #     config["system"]["iplimit-count"],
+    #     config["system"]["iplimit-time"]
+    # )
+    print(config)
+
+end
+
+function setup_service_context(config::ServerConfig)::ServiceContext
+    oxygencontext=Oxygen.CONTEXT[]
+    SVCCONTEXT[]=ServiceContext(config, oxygencontext)
+end
+
+function julia_main()::Cint
+    args = ARGS
+    parsed_args = parse_args(args)
+    if parsed_args === nothing
+        return 1
+    end
+    config, show_help_flag, show_version_flag = parsed_args
+    if show_help_flag
+        show_help()
+        return 0
+    elseif show_version_flag
+        show_version()
+        return 0
+    end
+    if config == ""
+        config = get(ENV, CONFIG_ENV, CONFIG_DEFAULT_FILE)
+    end
+    println("Using configuration file: $config")
+    try
+    #     # 读取配置文件
+    load_config(config)
+    #     # 启动你的应用
+    #     start_application(config)
+    catch e
+        println("Error: ", e)
+        return 1
+    end
+    return 0
+end
 
 # struct DBApi end
 # struct JwtApi end

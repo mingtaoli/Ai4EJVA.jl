@@ -7,4 +7,6 @@ using .Ai4EJVA
 # Ai4eJVA.SetupDBList()
 # Ai4eJVA.CreateTables()
 # Ai4eJVA.serve()
-Ai4eJVA.julia_main()
+Ai4EJVA.julia_main()
+
+joinpath(@__DIR__, "..", "etc", "front-api.yaml")
