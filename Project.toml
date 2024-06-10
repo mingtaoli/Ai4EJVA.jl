@@ -1,0 +1,8 @@
+name = "Ai4EJVA"
+uuid = "bc2e6099-0780-4aa7-b702-3b62cc7cd956"
+authors = ["mingtaoli <mingtao@xjtu.edu.cn>"]
+version = "0.1.0"
+
+[deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
+YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
