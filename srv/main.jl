@@ -1,5 +1,5 @@
 include("../src/Ai4eJVA.jl")
-using .Ai4eJVA
+using .Ai4EJVA
 # Ai4eJVA.SetupConfig()
 # Ai4eJVA.SetupLog()
 # Ai4eJVA.SetupDB()

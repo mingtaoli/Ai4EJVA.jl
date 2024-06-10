@@ -1,9 +1,13 @@
 module Ai4EJVA
 using YAML
+using Oxygen
 const Ai4EJVA_VERSION = v"0.1.0"
 const Ai4EJVA_AUTHOR = "Ai4Energy Team"
 const CONFIG_ENV = "Ai4EJVA_CONFIG"
-const CONFIG_DEFAULT_FILE = "Ai4EJVA.yaml"
+const CONFIG_DEFAULT_FILE = "etc/Ai4EJVA.yaml"
+const CONFIG_TEST_FILE = "etc/test.yml"
+const CONFIG_DEBUG_FILE = "etc/debug.yml"
+
 const HELP_INFO = """
 This is Ai4EJVA.jl $Ai4EJVA_VERSION by $Ai4EJVA_AUTHOR.
 
@@ -31,7 +35,6 @@ function parse_args(args)
     config = ""
     show_help_flag = false
     show_version_flag = false
-
     i = 1
     while i <= length(args)
         arg = args[i]
@@ -53,7 +56,6 @@ function parse_args(args)
         end
         i += 1
     end
-
     return (config, show_help_flag, show_version_flag)
 end
 
@@ -96,33 +98,73 @@ function julia_main()::Cint
 
 end
 
+struct JWTConfig
+    signing_key::String
+    expires_time::String
+    buffer_time::String
+    issuer::String
+end
+
+struct SystemConfig
+    db_type::String
+    oss_type::String
+    router_prefix::String
+    addr::Int
+    limit_count_ip::Int
+    limit_time_ip::Int
+    use_multipoint::Bool
+    use_redis::Bool
+    use_mongo::Bool
+end
+
+struct EmailConfig
+    to::String
+    from::String
+    host::String
+    secret::String
+    nickname::String
+    port::Int
+    is_ssl::Bool
+end
+
+struct PgsqlConfig
+    host::String
+    port::Int
+    username::String
+    password::String
+    database::String
+end
+
+struct CORSWhitelistConfig
+    allow_origin::String
+    allow_methods::String
+    allow_headers::String
+    expose_headers::String
+    allow_credentials::Bool
+end
+
+struct CORSConfig
+    mode::String
+    whitelist::Vector{CORSWhitelistConfig}
+end
 
 
-# # 定义全局变量
-# const Ai4EJVA_DB = Dict{String, DataFrame}()
-# const Ai4EJVA_DBList = Dict{String, DataFrame}()
-# # const Ai4EJVA_REDIS = RedisConnection()  # 需要根据 Redis 库的实际初始化方法来修改
-# # const Ai4EJVA_MONGO = MongoClient()      # 同样，确保 MongoClient 的初始化方法正确
-# const Ai4EJVA_CONFIG = Dict{String, Any}()
-# # const Ai4EJVA_LOG = global_logger()
-# # const Ai4EJVA_Timer = Timer()
-# const Ai4EJVA_Concurrency_Control = Channel{Bool}(Inf)
 
-# # 定义环境变量和默认配置文件路径
-# const ConfigEnv = "Ai4EJVA_CONFIG"
-# const ConfigDefaultFile = "config/debug.yml"
-# const ConfigReleaseFile = "config/release.yml"
-# const ConfigTestFile = "config/test.yml"
+struct ServerConfig
+    jwt::JWTConfig
+    email::EmailConfig
+    system::SystemConfig
+    pgsql::PgsqlConfig
+    cors::CORSConfig
+end
 
+mutable struct ServiceContext
+    serverconfig::ServerConfig
+    oxygencontext::Oxygen.Context
+end
 
-
-# # 定义环境变量和默认配置文件路径
-# const ConfigEnv = "GVA_CONFIG"
-# const ConfigDefaultFile = "config.yaml"
-# const ConfigTestFile = "config.test.yaml"
-# const ConfigDebugFile = "config.debug.yaml"
-# const ConfigReleaseFile = "config.release.yaml"
-
+# 全局服务上下文变量
+const SVCCONTEXT = Ref{ServiceContext}()
 
 # struct DBApi end
 # struct JwtApi end
