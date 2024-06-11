@@ -1,6 +1,7 @@
 module Ai4EJVA
 using YAML
 using Oxygen
+include("models.jl")
 const Ai4EJVA_VERSION = v"0.1.0"
 const Ai4EJVA_AUTHOR = "Ai4Energy Team"
 const CONFIG_ENV = "Ai4EJVA_CONFIG"
@@ -279,8 +280,21 @@ const ApiGroupApp = ApiGroup(
     )
 )
 
-function UserLogin(req)
-    return Oxygen.Response(200, "User Login")
+
+function UserLogin(request::HTTP.Request) #这是handler
+    # 先做反序列化得到LoginRequest
+    loginrequest = json(request, LoginRequest)
+    
+    # 如果需要才调用外部函数处理登录逻辑 否则，直接把logic写在这里就可以了。
+    response = login(loginrequest, SVCCONTEXT[])
+    
+    # 返回UserLoginResponse类型
+    return UserLoginResponse(response.userid, response.loginname, response.token)
+end
+
+# 这个就是类似go-zero中的logic函数，如非必要不要这个单独的userlogic，直接在handler里写就很好了。
+function login(loginrequest::LoginRequest, svc_ctx::ServiceContext)::UserLoginResponse
+#logic here 这个函数就是logic处理函数
 end
 
 # 路由初始化函数
