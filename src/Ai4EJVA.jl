@@ -31,15 +31,16 @@ struct JWTConfig
 end
 
 struct SystemConfig
+    env::String
+    addr::Int
     db_type::String
     oss_type::String
-    router_prefix::String
-    addr::Int
-    limit_count_ip::Int
-    limit_time_ip::Int
-    use_multipoint::Bool
     use_redis::Bool
     use_mongo::Bool
+    use_multipoint::Bool
+    iplimit_count::Int
+    iplimit_time::Int
+    router_prefix::String
 end
 
 struct EmailConfig

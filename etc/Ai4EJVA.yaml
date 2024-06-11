@@ -1,5 +1,5 @@
 system:
-  env: prod  # Change to "develop" to skip authentication for development mode
+  env: prod
   addr: 9803
   db-type: pgsql
   use-redis: false
@@ -7,6 +7,7 @@ system:
   use-multipoint: false
   iplimit-count: 15000
   iplimit-time: 3600
+  router-prefix: ""
 
 # jwt configuration
 jwt:
@@ -14,7 +15,6 @@ jwt:
   expires-time: 7d
   buffer-time: 1d
   issuer: ai4energy
-
 
 # captcha configuration
 captcha:
