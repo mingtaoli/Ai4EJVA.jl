@@ -15,6 +15,15 @@ jwt:
   buffer-time: 1d
   issuer: ai4energy
 
+email:
+  to: ""
+  from: ""
+  host: ""
+  secret: ""
+  nickname: ""
+  port: 521
+  is_ssl: false
+
 captcha:
   key-long: 6
   img-width: 240

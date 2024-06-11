@@ -78,7 +78,7 @@ struct ServerConfig
     email::EmailConfig
     system::SystemConfig
     pgsql::PgsqlConfig
-    cors::CORSConfig
+    # cors::CORSConfig
 end
 
 mutable struct ServiceContext
@@ -126,6 +126,21 @@ end
 
 function load_config(filename::String)
     config = YAML.load_file(filename)
+    jwt_config=JWTConfig(
+        config["jwt"]["signing-key"],
+        config["jwt"]["expires-time"],
+        config["jwt"]["buffer-time"],
+        config["jwt"]["issuer"]
+    )
+    email_config=EmailConfig(
+        config["email"]["to"],
+        config["email"]["from"],
+        config["email"]["host"],
+        config["email"]["secret"],
+        config["email"]["nickname"],
+        config["email"]["port"],
+        config["email"]["is_ssl"]
+    )
     system_config = SystemConfig(
         config["system"]["env"],
         config["system"]["addr"],
@@ -137,8 +152,6 @@ function load_config(filename::String)
         config["system"]["iplimit-time"],
         config["system"]["router-prefix"]
     )
-    print(system_config)
-
     pgsql_config=PgsqlConfig(
         config["pgsql"]["host"],
         config["pgsql"]["port"],
@@ -146,8 +159,14 @@ function load_config(filename::String)
         config["pgsql"]["password"],
         config["pgsql"]["database"]
     )
- 
-    return system_config, pgsql_config
+    # cors_config=CORSConfig(
+        
+    # )
+    ServerConfig(
+        jwt_config,
+        email_config,
+        system_config,
+        pgsql_config)
 end
 
 function setup_service_context(config::ServerConfig)::ServiceContext
