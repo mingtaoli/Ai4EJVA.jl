@@ -196,8 +196,8 @@ function julia_main()::Cint
         #     # 读取配置文件
         serverconfig = load_config(config)
         setup_service_context(serverconfig)
-        #     # 启动你的应用
-        #     start_application(config)
+        InitRouter(ApiGroupApp)
+        Oxygen.serve()
     catch e
         println("Error: ", e)
         return 1
@@ -279,6 +279,10 @@ const ApiGroupApp = ApiGroup(
     )
 )
 
+function UserLogin(req)
+    return Oxygen.Response(200, "User Login")
+end
+
 # 路由初始化函数
 function InitRouter(router::DBApi, group::AbstractString)
     Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
@@ -299,7 +303,7 @@ function InitRouter(router::SystemApi, group::AbstractString)
 end
 
 # 多重分发的路由组初始化函数
-function initiate_route(api_group::SystemApiGroup, ::Type{PublicGroup})
+function InitRouter(api_group::SystemApiGroup, ::Type{PublicGroup})
     InitRouter(api_group.db_api, "/public")
     InitRouter(api_group.jwt_api, "/public")
     InitRouter(api_group.base_api, "/public")
@@ -307,7 +311,7 @@ function initiate_route(api_group::SystemApiGroup, ::Type{PublicGroup})
     # 初始化其他 API 路由...
 end
 
-function initiate_route(api_group::SystemApiGroup, ::Type{PrivateGroup})
+function InitRouter(api_group::SystemApiGroup, ::Type{PrivateGroup})
     InitRouter(api_group.db_api, "/private")
     InitRouter(api_group.jwt_api, "/private")
     InitRouter(api_group.base_api, "/private")
@@ -315,46 +319,21 @@ function initiate_route(api_group::SystemApiGroup, ::Type{PrivateGroup})
     # 初始化其他 API 路由...
 end
 
-function initiate_route(api_group::ExampleApiGroup, ::Type{PublicGroup})
+function InitRouter(api_group::ExampleApiGroup, ::Type{PublicGroup})
     InitRouter(api_group.customer_api, "/public")
     InitRouter(api_group.file_upload_and_download_api, "/public")
 end
 
-function initiate_route(api_group::ExampleApiGroup, ::Type{PrivateGroup})
+function InitRouter(api_group::ExampleApiGroup, ::Type{PrivateGroup})
     InitRouter(api_group.customer_api, "/private")
     InitRouter(api_group.file_upload_and_download_api, "/private")
 end
 
-function initiate_route(api_group::ApiGroup)
+function InitRouter(api_group::ApiGroup)
     InitRouter(api_group.system_api_group, ::Type{PublicGroup})
     InitRouter(api_group.system_api_group, ::Type{PrivateGroup})
     InitRouter(api_group.example_api_group, ::Type{PublicGroup})
     InitRouter(api_group.example_api_group, ::Type{PrivateGroup})
 end
-
-# # 启动服务器
-# function run_server()
-#     if GAPHD_CONFIG["System"]["UseMultipoint"] || GAPHD_CONFIG["System"]["UseRedis"]
-#         initialize_redis()
-#     end
-
-#     if GAPHD_CONFIG["System"]["UseMongo"]
-#         initialize_mongo()
-#     end
-
-#     load_all_from_db()
-
-#     router = initialize_routers()
-#     address = GAPHD_CONFIG["System"]["Addr"]
-#     server_address = "0.0.0.0:$address"
-#     info(GAPHD_LOG, "Server running on $server_address")
-
-#     println("""
-
-# **
-#     """)
-
-#     HTTP.serve(router, server_address)
-# end
 
 end # module Ai4EJVA
