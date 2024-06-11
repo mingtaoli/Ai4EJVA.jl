@@ -9,23 +9,19 @@ system:
   iplimit-time: 3600
   router-prefix: ""
 
-# jwt configuration
 jwt:
   signing-key: ai4energy
   expires-time: 7d
   buffer-time: 1d
   issuer: ai4energy
 
-# captcha configuration
 captcha:
   key-long: 6
   img-width: 240
   img-height: 80
-  open-captcha: 0 # 0代表一直开启，大于0代表限制次数
-  open-captcha-timeout: 3600 # open-captcha大于0时才生效
+  open-captcha: 0
+  open-captcha-timeout: 3600
 
-# pgsql connect configuration
-# 未初始化之前请勿手动修改数据库信息！！！
 pgsql:
   path: ""
   port: ""
@@ -39,9 +35,9 @@ pgsql:
   log-zap: false
 
 db-list:
-  - disable: true # 是否禁用
-    type: "" # 数据库的类型,目前支持mysql、pgsql
-    alias-name: "" # 数据库的名称,注意: alias-name 需要在db-list中唯一
+  - disable: true
+    type: ""
+    alias-name: ""
     path: ""
     port: ""
     config: ""
@@ -53,17 +49,16 @@ db-list:
     log-mode: ""
     log-zap: false
 
-
 cors:
-  mode: whitelist # 放行模式: allow-all, 放行全部; whitelist, 白名单模式, 来自白名单内域名的请求添加 cors 头; strict-whitelist 严格白名单模式, 白名单外的请求一律拒绝
+  mode: whitelist
   whitelist:
     - allow-origin: example1.com
       allow-headers: content-type
       allow-methods: GET, POST
       expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type
-      allow-credentials: true # 布尔值
+      allow-credentials: true
     - allow-origin: example2.com
       allow-headers: content-type
       allow-methods: GET, POST
       expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type
-      allow-credentials: true # 布尔值
+      allow-credentials: true
