@@ -105,7 +105,7 @@ function parse_args(args)
         arg = args[i]
         if arg == "-c" || arg == "--config"
             if i + 1 <= length(args)
-                config = args[i + 1]
+                config = args[i+1]
                 i += 1
             else
                 println("Error: --config option requires a value")
@@ -126,13 +126,13 @@ end
 
 function load_config(filename::String)
     config = YAML.load_file(filename)
-    jwt_config=JWTConfig(
+    jwt_config = JWTConfig(
         config["jwt"]["signing-key"],
         config["jwt"]["expires-time"],
         config["jwt"]["buffer-time"],
         config["jwt"]["issuer"]
     )
-    email_config=EmailConfig(
+    email_config = EmailConfig(
         config["email"]["to"],
         config["email"]["from"],
         config["email"]["host"],
@@ -152,7 +152,7 @@ function load_config(filename::String)
         config["system"]["iplimit-time"],
         config["system"]["router-prefix"]
     )
-    pgsql_config=PgsqlConfig(
+    pgsql_config = PgsqlConfig(
         config["pgsql"]["host"],
         config["pgsql"]["port"],
         config["pgsql"]["username"],
@@ -160,7 +160,7 @@ function load_config(filename::String)
         config["pgsql"]["database"]
     )
     # cors_config=CORSConfig(
-        
+
     # )
     ServerConfig(
         jwt_config,
@@ -170,8 +170,8 @@ function load_config(filename::String)
 end
 
 function setup_service_context(config::ServerConfig)::ServiceContext
-    oxygencontext=Oxygen.CONTEXT[]
-    SVCCONTEXT[]=ServiceContext(config, oxygencontext)
+    oxygencontext = Oxygen.CONTEXT[]
+    SVCCONTEXT[] = ServiceContext(config, oxygencontext)
 end
 
 function julia_main()::Cint
@@ -193,10 +193,11 @@ function julia_main()::Cint
     end
     println("Using configuration file: $config")
     try
-    #     # 读取配置文件
-    load_config(config)
-    #     # 启动你的应用
-    #     start_application(config)
+        #     # 读取配置文件
+        serverconfig = load_config(config)
+        setup_service_context(serverconfig)
+        #     # 启动你的应用
+        #     start_application(config)
     catch e
         println("Error: ", e)
         return 1
@@ -204,279 +205,132 @@ function julia_main()::Cint
     return 0
 end
 
-# struct DBApi end
-# struct JwtApi end
-# struct BaseApi end
-# struct SystemApi end
-# struct CasbinApi end
-# struct AutoCodeApi end
-# struct SystemApiApi end
-# struct AuthorityApi end
-# struct DictionaryApi end
-# struct AuthorityMenuApi end
-# struct OperationRecordApi end
-# struct AutoCodeHistoryApi end
-# struct DictionaryDetailApi end
-# struct AuthorityBtnApi end
-# struct SysExportTemplateApi end
+struct DBApi end
+struct JwtApi end
+struct BaseApi end
+struct SystemApi end
+struct CasbinApi end
+struct AutoCodeApi end
+struct SystemApiApi end
+struct AuthorityApi end
+struct DictionaryApi end
+struct AuthorityMenuApi end
+struct OperationRecordApi end
+struct AutoCodeHistoryApi end
+struct DictionaryDetailApi end
+struct AuthorityBtnApi end
+struct SysExportTemplateApi end
+struct CustomerApi end
+struct FileUploadAndDownloadApi end
 
-# struct CustomerApi end
-# struct FileUploadAndDownloadApi end
+# 定义系统 API 组
+struct SystemApiGroup
+    db_api::DBApi
+    jwt_api::JwtApi
+    base_api::BaseApi
+    system_api::SystemApi
+    casbin_api::CasbinApi
+    auto_code_api::AutoCodeApi
+    system_api_api::SystemApiApi
+    authority_api::AuthorityApi
+    dictionary_api::DictionaryApi
+    authority_menu_api::AuthorityMenuApi
+    operation_record_api::OperationRecordApi
+    auto_code_history_api::AutoCodeHistoryApi
+    dictionary_detail_api::DictionaryDetailApi
+    authority_btn_api::AuthorityBtnApi
+    sys_export_template_api::SysExportTemplateApi
+end
 
-# # 定义系统 API 组
-# struct SystemApiGroup
-#     db_api::DBApi
-#     jwt_api::JwtApi
-#     base_api::BaseApi
-#     system_api::SystemApi
-#     casbin_api::CasbinApi
-#     auto_code_api::AutoCodeApi
-#     system_api_api::SystemApiApi
-#     authority_api::AuthorityApi
-#     dictionary_api::DictionaryApi
-#     authority_menu_api::AuthorityMenuApi
-#     operation_record_api::OperationRecordApi
-#     auto_code_history_api::AutoCodeHistoryApi
-#     dictionary_detail_api::DictionaryDetailApi
-#     authority_btn_api::AuthorityBtnApi
-#     sys_export_template_api::SysExportTemplateApi
-# end
+# 定义示例 API 组
+struct ExampleApiGroup
+    customer_api::CustomerApi
+    file_upload_and_download_api::FileUploadAndDownloadApi
+end
 
-# # 定义示例 API 组
-# struct ExampleApiGroup
-#     customer_api::CustomerApi
-#     file_upload_and_download_api::FileUploadAndDownloadApi
-# end
+# 定义主 API 组
+struct ApiGroup
+    system_api_group::SystemApiGroup
+    example_api_group::ExampleApiGroup
+end
 
-# # 定义主 API 组
-# struct ApiGroup
-#     system_api_group::SystemApiGroup
-#     example_api_group::ExampleApiGroup
-# end
+# 创建全局变量
+const ApiGroupApp = ApiGroup(
+    SystemApiGroup(
+        DBApi(),
+        JwtApi(),
+        BaseApi(),
+        SystemApi(),
+        CasbinApi(),
+        AutoCodeApi(),
+        SystemApiApi(),
+        AuthorityApi(),
+        DictionaryApi(),
+        AuthorityMenuApi(),
+        OperationRecordApi(),
+        AutoCodeHistoryApi(),
+        DictionaryDetailApi(),
+        AuthorityBtnApi(),
+        SysExportTemplateApi()
+    ),
+    ExampleApiGroup(
+        CustomerApi(),
+        FileUploadAndDownloadApi()
+    )
+)
 
-# # 创建全局变量
-# const ApiGroupApp = ApiGroup(
-#     SystemApiGroup(
-#         DBApi(),
-#         JwtApi(),
-#         BaseApi(),
-#         SystemApi(),
-#         CasbinApi(),
-#         AutoCodeApi(),
-#         SystemApiApi(),
-#         AuthorityApi(),
-#         DictionaryApi(),
-#         AuthorityMenuApi(),
-#         OperationRecordApi(),
-#         AutoCodeHistoryApi(),
-#         DictionaryDetailApi(),
-#         AuthorityBtnApi(),
-#         SysExportTemplateApi()
-#     ),
-#     ExampleApiGroup(
-#         CustomerApi(),
-#         FileUploadAndDownloadApi()
-#     )
-# )
-
-
-# # 定义空类型，用于多重分发
-# abstract type RouterGroup end
-# struct PublicGroup <: RouterGroup end
-# struct PrivateGroup <: RouterGroup end
-
-# # 定义不同的路由初始化函数
-# function initiate_route(router, ::Type{PublicGroup})
-#     InitBaseRouter(router, "/public")
-#     InitInitRouter(router, "/public")
-# end
-
-# function initiate_route(router, ::Type{PrivateGroup})
-#     InitApiRouter(router, "/private")
-#     InitJwtRouter(router, "/private")
-#     InitUserRouter(router, "/private")
-# end
-
-# function InitBaseRouter(router, group::AbstractString)
-#     HTTP.@register(router, "GET", group * "/base", req -> HTTP.Response(200, "Base Router"))
-# end
-
-# # 改成InitRouter(a::BaseRouter)
-# # InitRouter(b::InitRouter)
-# # 等多重分发形式
-
-# function InitInitRouter(router, group::AbstractString)
-#     HTTP.@register(router, "GET", group * "/init", req -> HTTP.Response(200, "Init Router"))
-# end
-
-# function InitApiRouter(router, group::AbstractString)
-#     HTTP.@register(router, "GET", group * "/api", req -> HTTP.Response(200, "API Router"))
-# end
-
-# function InitJwtRouter(router, group::AbstractString)
-#     HTTP.@register(router, "GET", group * "/jwt", req -> HTTP.Response(200, "JWT Router"))
-# end
-
-# function InitUserRouter(router, group::AbstractString)
-#     HTTP.@register(router, "GET", group * "/user", req -> HTTP.Response(200, "User Router"))
-# end
-
-# # 添加其他需要的路由初始化函数...
-
-# # 初始化路由器
-# function initialize_routers()
-#     router = HTTP.Router()
-
-#     # 添加静态文件路由
-#     HTTP.servefiles(router, "/form-generator" => "./resource/page")
-
-#     # 添加Swagger路由（作为示例）
-#     HTTP.@register(router, "GET", "/swagger", req -> HTTP.Response(200, "Swagger Handler"))
-
-#     # 公共路由组
-#     HTTP.@register(router, "GET", "/public/health", req -> HTTP.Response(200, JSON.json("ok")))
-#     initiate_route(router, PublicGroup)
-
-#     # 私有路由组
-#     HTTP.@register(router, "GET", "/private/auth", req -> HTTP.Response(200, "Auth Middleware"))  # 示例中间件
-#     initiate_route(router, PrivateGroup)
-
-#     return router
-# end
+# 路由初始化函数
+function InitRouter(router::DBApi, group::AbstractString)
+    Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
+    #这里学习一下oxygen的文档，看如何进行group
+end
 
 
+function InitRouter(router::JwtApi, group::AbstractString)
+    Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
+end
 
-# # 根据配置中的数据库类型连接相应的数据库
-# function ConnectDB()
-#     db_type = GAPHD_CONFIG["System"]["DbType"]
-#     if db_type == "mysql"
-#         return ConnectMysql()
-#     elseif db_type == "pgsql"
-#         return ConnectPgSql()
-#     elseif db_type == "oracle"
-#         return ConnectOracle()
-#     elseif db_type == "mssql"
-#         return ConnectMssql()
-#     elseif db_type == "sqlite"
-#         return ConnectSqlite()
-#     else
-#         error("Unsupported database type: $db_type")
-#     end
-# end
+function InitRouter(router::BaseApi, group::AbstractString)
+    Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
+end
 
+function InitRouter(router::SystemApi, group::AbstractString)
+    Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
+end
 
-# # 初始化多个数据库连接并存储在全局变量中
-# function MultiDBConnect()
-#     db_map = Dict{String, Any}()
-#     for info in GAPHD_CONFIG["DBList"]
-#         if info["Disable"]
-#             continue
-#         end
-#         db_config = info["GeneralDB"]
-#         alias_name = info["AliasName"]
-#         db_type = info["Type"]
-#         if db_type == "mysql"
-#             db_map[alias_name] = ConnectMysqlByConfig(db_config)
-#         elseif db_type == "pgsql"
-#             db_map[alias_name] = ConnectPgSqlByConfig(db_config)
-#         elseif db_type == "oracle"
-#             db_map[alias_name] = ConnectOracleByConfig(db_config)
-#         elseif db_type == "mssql"
-#             db_map[alias_name] = ConnectMssqlByConfig(db_config)
-#         else
-#             continue
-#         end
-#     end
-#     # 适配低版本迁移多数据库版本
-#     if haskey(db_map, "sys")
-#         GAPHD_DB["sys"] = db_map["sys"]
-#     end
-#     GAPHD_DBList = db_map
-# end
+# 多重分发的路由组初始化函数
+function initiate_route(api_group::SystemApiGroup, ::Type{PublicGroup})
+    InitRouter(api_group.db_api, "/public")
+    InitRouter(api_group.jwt_api, "/public")
+    InitRouter(api_group.base_api, "/public")
+    InitRouter(api_group.system_api, "/public")
+    # 初始化其他 API 路由...
+end
 
-# # 数据模型示例
-# function create_tables(db::SQLite.DB)
-#     execute(db, """
-#         CREATE TABLE IF NOT EXISTS SysApi (
-#             id INTEGER PRIMARY KEY,
-#             name TEXT
-#         );
-#     """)
+function initiate_route(api_group::SystemApiGroup, ::Type{PrivateGroup})
+    InitRouter(api_group.db_api, "/private")
+    InitRouter(api_group.jwt_api, "/private")
+    InitRouter(api_group.base_api, "/private")
+    InitRouter(api_group.system_api, "/private")
+    # 初始化其他 API 路由...
+end
 
-#     execute(db, """
-#         CREATE TABLE IF NOT EXISTS SysUser (
-#             id INTEGER PRIMARY KEY,
-#             username TEXT,
-#             password TEXT
-#         );
-#     """)
+function initiate_route(api_group::ExampleApiGroup, ::Type{PublicGroup})
+    InitRouter(api_group.customer_api, "/public")
+    InitRouter(api_group.file_upload_and_download_api, "/public")
+end
 
-#     # 添加其他表的创建语句
-#     execute(db, """
-#         CREATE TABLE IF NOT EXISTS ExaFile (
-#             id INTEGER PRIMARY KEY,
-#             filename TEXT,
-#             filepath TEXT
-#         );
-#     """)
+function initiate_route(api_group::ExampleApiGroup, ::Type{PrivateGroup})
+    InitRouter(api_group.customer_api, "/private")
+    InitRouter(api_group.file_upload_and_download_api, "/private")
+end
 
-#     # 添加更多表的创建语句，根据你的需求
-# end
-
-# # 注册表函数
-# function RegisterTables()
-#     db = GAPHD_DB[]
-
-#     try
-#         create_tables(db)
-#         info(GAPHD_LOG, "Register tables success")
-#     catch e
-#         error(GAPHD_LOG, "Register tables failed: $e")
-#         exit(1)
-#     end
-# end
-
-
-# # 定义一个简单的计时器结构体和相关函数
-# mutable struct Timer
-#     start_time::Float64
-#     end_time::Float64
-# end
-
-# function start_timer(timer::Timer)
-#     timer.start_time = time()
-# end
-
-# function stop_timer(timer::Timer)
-#     timer.end_time = time()
-# end
-
-# function elapsed_time(timer::Timer)::Float64
-#     return timer.end_time - timer.start_time
-# end
-
-# # 获取DB函数
-# function get_global_db_by_dbname(dbname::String)::DataFrame
-#     return haskey(Ai4EJVA_DBList, dbname) ? Ai4EJVA_DBList[dbname] : DataFrame()
-# end
-
-# # 必须获取DB函数
-# function must_get_global_db_by_dbname(dbname::String)::DataFrame
-#     if !haskey(Ai4EJVA_DBList, dbname)
-#         error("db no init")
-#     end
-#     return Ai4EJVA_DBList[dbname]
-# end
-
-# # 示例结构体
-# mutable struct GVA_MODEL
-#     ID::Int64
-#     CreatedAt::DateTime
-#     UpdatedAt::DateTime
-#     DeletedAt::Union{Nothing, DateTime}
-
-#     GVA_MODEL() = new(0, now(), now(), nothing)
-# end
+function initiate_route(api_group::ApiGroup)
+    InitRouter(api_group.system_api_group, ::Type{PublicGroup})
+    InitRouter(api_group.system_api_group, ::Type{PrivateGroup})
+    InitRouter(api_group.example_api_group, ::Type{PublicGroup})
+    InitRouter(api_group.example_api_group, ::Type{PrivateGroup})
+end
 
 # # 启动服务器
 # function run_server()
@@ -496,12 +350,7 @@ end
 #     info(GAPHD_LOG, "Server running on $server_address")
 
 #     println("""
-#     欢迎使用 gin-vue-admin
-#     当前版本:v2.6.5
-#     加群方式:微信号：shouzi_1994 QQ群：470239250
-#     项目地址：https://github.com/flipped-aurora/gin-vue-admin
-#     插件市场:https://plugin.gin-vue-admin.com
-#     GVA讨论社区:https://support.qq.com/products/371961
+
 # **
 #     """)
 

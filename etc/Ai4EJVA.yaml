@@ -32,12 +32,12 @@ captcha:
   open-captcha-timeout: 3600
 
 pgsql:
-  path: ""
-  port: ""
-  config: ""
-  db-name: ""
+  host: ""
+  port: 5432
+  database: ""
   username: ""
   password: ""
+  config: ""
   max-idle-conns: 10
   max-open-conns: 100
   log-mode: ""
