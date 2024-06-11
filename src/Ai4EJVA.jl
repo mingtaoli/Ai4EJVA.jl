@@ -30,11 +30,10 @@ struct JWTConfig
     issuer::String
 end
 
-struct SystemConfig
+mutable struct SystemConfig
     env::String
     addr::Int
     db_type::String
-    oss_type::String
     use_redis::Bool
     use_mongo::Bool
     use_multipoint::Bool
@@ -126,20 +125,21 @@ function parse_args(args)
 end
 
 function load_config(filename::String)
-    
     config = YAML.load_file(filename)
-    # system_config = SystemConfig(
-    #     config["system"]["env"],
-    #     config["system"]["addr"],
-    #     config["system"]["db-type"],
-    #     config["system"]["use-redis"],
-    #     config["system"]["use-mongo"],
-    #     config["system"]["use-multipoint"],
-    #     config["system"]["iplimit-count"],
-    #     config["system"]["iplimit-time"]
-    # )
-    print(config)
-
+    system_config = SystemConfig(
+        config["system"]["env"],
+        config["system"]["addr"],
+        config["system"]["db-type"],
+        config["system"]["use-redis"],
+        config["system"]["use-mongo"],
+        config["system"]["use-multipoint"],
+        config["system"]["iplimit-count"],
+        config["system"]["iplimit-time"],
+        config["system"]["router-prefix"]
+    )
+    print(system_config)
+ 
+    return system_config
 end
 
 function setup_service_context(config::ServerConfig)::ServiceContext
