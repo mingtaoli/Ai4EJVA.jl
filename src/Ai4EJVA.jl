@@ -138,8 +138,16 @@ function load_config(filename::String)
         config["system"]["router-prefix"]
     )
     print(system_config)
+
+    pgsql_config=PgsqlConfig(
+        config["pgsql"]["host"],
+        config["pgsql"]["port"],
+        config["pgsql"]["username"],
+        config["pgsql"]["password"],
+        config["pgsql"]["database"]
+    )
  
-    return system_config
+    return system_config, pgsql_config
 end
 
 function setup_service_context(config::ServerConfig)::ServiceContext
