@@ -238,8 +238,8 @@ end
 
 function InitRouter()
     println("Initializing main router")
-    ModuleA.initrouter()
-    ModuleB.initrouter()
+    ModuleA.InitRouter()
+    ModuleB.InitRouter()
     # 可以根据需要添加更多模块的路由初始化
 end
 
