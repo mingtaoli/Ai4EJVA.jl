@@ -88,7 +88,7 @@ mutable struct ServiceContext
     serverconfig::ServerConfig
     oxygencontext::Oxygen.Context
     # 以下这行，就有点仿go-zero的那个意思了，go-zero中svc抓住了各个模型的，具体怎么设置这个字段再讨论
-    model_drivers::Dict{String, ModelDriver}
+    model_drivers::Dict{String,ModelDriver}
 end
 
 const SVCCONTEXT = Ref{ServiceContext}()
@@ -176,8 +176,25 @@ end
 
 function setup_service_context(config::ServerConfig)::ServiceContext
     oxygencontext = Oxygen.CONTEXT[]
-    empty_dict = Dict{String, ModelDriver}()
-    SVCCONTEXT[] = ServiceContext(config, oxygencontext,empty_dict)
+    empty_dict = Dict{String,ModelDriver}()
+    SVCCONTEXT[] = ServiceContext(config, oxygencontext, empty_dict)
+end
+
+function verify_token(token::String)::Bool
+    response = HTTP.post("http://ai4energy.cn/usercenter/verify", HTTP.Headers("Authorization" => "Bearer $token"))
+    return response.status == 200
+end
+
+function AuthMiddleware(handler)
+    return function (req::HTTP.Request)
+        println("Auth middleware")
+        token = HTTP.header(req, "Authorization")
+        if token == nothing || !verify_token(token)
+            return HTTP.Response(401, "Unauthorized")
+        else
+            return handler(req)
+        end
+    end
 end
 
 function julia_main()::Cint
@@ -213,27 +230,33 @@ function julia_main()::Cint
 end
 
 module ModuleA
-    using Oxygen
-    function InitRouter()
-        println("Initializing router for ModuleA")
-        # 在这里添加 ModuleA 的路由初始化代码
-    end
+using Oxygen
+function InitRouter()
+    println("Initializing router for ModuleA")
+    # 在这里添加 ModuleA 的路由初始化代码
+end
 end
 module ModuleB
-    # 把不同的Module做成package，using它就好
-    function UserLogin(request::HTTP.Request) #这是handler
+# 把不同的Module做成package，using它就好
+function UserLogin(request::HTTP.Request) #这是handler
     # 先做反序列化得到LoginRequest
     loginrequest = json(request, LoginRequest)
-    
+
     # 如果需要才调用外部函数处理登录逻辑 否则，直接把logic写在这里就可以了。
     response = "hello"
 
-    end
-    function InitRouter()
-        println("Initializing router for ModuleB")
-        Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
-        # 在这里添加 ModuleB 的路由初始化代码
-    end
+end
+function SimulateHandler(request::HTTP.Request)
+    println("Simulate handler called")
+    # 处理逻辑
+    return HTTP.Response(200, "Simulation response")
+end
+function InitRouter()
+    println("Initializing router for ModuleB")
+    Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
+    # 在这里添加 ModuleB 的路由初始化代码
+    Oxygen.route([Oxygen.POST], "/simulate", AuthMiddleware(SimulateHandler))
+end
 end
 
 function InitRouter()
@@ -244,9 +267,22 @@ function InitRouter()
 end
 
 
+## 参见oxygen.jl的文档
+
+# # set middleware at the router level
+# math = router("math", middleware=[middleware1])
+
+# # set middleware at the route level 
+# @get math("/divide/{a}/{b}", middleware=[middleware2]) function(req, a::Float64, b::Float64)
+#     return a / b
+# end
+
+# # set application level middleware
+# serve(middleware=[CorsMiddleware, AuthMiddleware])
+
 # 这个就是类似go-zero中的logic函数，如非必要不要这个单独的userlogic，直接在handler里写就很好了。
 function login(loginrequest::LoginRequest, svc_ctx::ServiceContext)::UserLoginResponse
-#logic here 这个函数就是logic处理函数
+    #logic here 这个函数就是logic处理函数
 end
 
 
