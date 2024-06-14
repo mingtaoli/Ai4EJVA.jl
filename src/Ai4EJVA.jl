@@ -82,9 +82,13 @@ struct ServerConfig
     # cors::CORSConfig
 end
 
+abstract type ModelDriver end
+
 mutable struct ServiceContext
     serverconfig::ServerConfig
     oxygencontext::Oxygen.Context
+    # 以下这行，就有点仿go-zero的那个意思了，go-zero中svc抓住了各个模型的，具体怎么设置这个字段再讨论
+    model_drivers::Dict{String, ModelDriver}
 end
 
 const SVCCONTEXT = Ref{ServiceContext}()
@@ -172,7 +176,8 @@ end
 
 function setup_service_context(config::ServerConfig)::ServiceContext
     oxygencontext = Oxygen.CONTEXT[]
-    SVCCONTEXT[] = ServiceContext(config, oxygencontext)
+    empty_dict = Dict{String, ModelDriver}()
+    SVCCONTEXT[] = ServiceContext(config, oxygencontext,empty_dict)
 end
 
 function julia_main()::Cint
@@ -197,7 +202,8 @@ function julia_main()::Cint
         #     # 读取配置文件
         serverconfig = load_config(config)
         setup_service_context(serverconfig)
-        InitRouter(ApiGroupApp)
+        InitRouter()
+        #每个模块中说不定还得改一下svc变量呢。
         Oxygen.serve()
     catch e
         println("Error: ", e)
@@ -206,148 +212,42 @@ function julia_main()::Cint
     return 0
 end
 
-struct DBApi end
-struct JwtApi end
-struct BaseApi end
-struct SystemApi end
-struct CasbinApi end
-struct AutoCodeApi end
-struct SystemApiApi end
-struct AuthorityApi end
-struct DictionaryApi end
-struct AuthorityMenuApi end
-struct OperationRecordApi end
-struct AutoCodeHistoryApi end
-struct DictionaryDetailApi end
-struct AuthorityBtnApi end
-struct SysExportTemplateApi end
-struct CustomerApi end
-struct FileUploadAndDownloadApi end
-
-# 定义系统 API 组
-struct SystemApiGroup
-    db_api::DBApi
-    jwt_api::JwtApi
-    base_api::BaseApi
-    system_api::SystemApi
-    casbin_api::CasbinApi
-    auto_code_api::AutoCodeApi
-    system_api_api::SystemApiApi
-    authority_api::AuthorityApi
-    dictionary_api::DictionaryApi
-    authority_menu_api::AuthorityMenuApi
-    operation_record_api::OperationRecordApi
-    auto_code_history_api::AutoCodeHistoryApi
-    dictionary_detail_api::DictionaryDetailApi
-    authority_btn_api::AuthorityBtnApi
-    sys_export_template_api::SysExportTemplateApi
+module ModuleA
+    using Oxygen
+    function InitRouter()
+        println("Initializing router for ModuleA")
+        # 在这里添加 ModuleA 的路由初始化代码
+    end
 end
-
-# 定义示例 API 组
-struct ExampleApiGroup
-    customer_api::CustomerApi
-    file_upload_and_download_api::FileUploadAndDownloadApi
-end
-
-# 定义主 API 组
-struct ApiGroup
-    system_api_group::SystemApiGroup
-    example_api_group::ExampleApiGroup
-end
-
-# 创建全局变量
-const ApiGroupApp = ApiGroup(
-    SystemApiGroup(
-        DBApi(),
-        JwtApi(),
-        BaseApi(),
-        SystemApi(),
-        CasbinApi(),
-        AutoCodeApi(),
-        SystemApiApi(),
-        AuthorityApi(),
-        DictionaryApi(),
-        AuthorityMenuApi(),
-        OperationRecordApi(),
-        AutoCodeHistoryApi(),
-        DictionaryDetailApi(),
-        AuthorityBtnApi(),
-        SysExportTemplateApi()
-    ),
-    ExampleApiGroup(
-        CustomerApi(),
-        FileUploadAndDownloadApi()
-    )
-)
-
-
-function UserLogin(request::HTTP.Request) #这是handler
+module ModuleB
+    # 把不同的Module做成package，using它就好
+    function UserLogin(request::HTTP.Request) #这是handler
     # 先做反序列化得到LoginRequest
     loginrequest = json(request, LoginRequest)
     
     # 如果需要才调用外部函数处理登录逻辑 否则，直接把logic写在这里就可以了。
-    response = login(loginrequest, SVCCONTEXT[])
-    
-    # 返回UserLoginResponse类型
-    return UserLoginResponse(response.userid, response.loginname, response.token)
+    response = "hello"
+
+    end
+    function InitRouter()
+        println("Initializing router for ModuleB")
+        Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
+        # 在这里添加 ModuleB 的路由初始化代码
+    end
 end
+
+function InitRouter()
+    println("Initializing main router")
+    ModuleA.initrouter()
+    ModuleB.initrouter()
+    # 可以根据需要添加更多模块的路由初始化
+end
+
 
 # 这个就是类似go-zero中的logic函数，如非必要不要这个单独的userlogic，直接在handler里写就很好了。
 function login(loginrequest::LoginRequest, svc_ctx::ServiceContext)::UserLoginResponse
 #logic here 这个函数就是logic处理函数
 end
 
-# 路由初始化函数
-function InitRouter(router::DBApi, group::AbstractString)
-    Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
-    #这里学习一下oxygen的文档，看如何进行group
-end
-
-
-function InitRouter(router::JwtApi, group::AbstractString)
-    Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
-end
-
-function InitRouter(router::BaseApi, group::AbstractString)
-    Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
-end
-
-function InitRouter(router::SystemApi, group::AbstractString)
-    Oxygen.route([Oxygen.POST], "/user/login", UserLogin)
-end
-
-# 多重分发的路由组初始化函数
-function InitRouter(api_group::SystemApiGroup, ::Type{PublicGroup})
-    InitRouter(api_group.db_api, "/public")
-    InitRouter(api_group.jwt_api, "/public")
-    InitRouter(api_group.base_api, "/public")
-    InitRouter(api_group.system_api, "/public")
-    # 初始化其他 API 路由...
-end
-
-function InitRouter(api_group::SystemApiGroup, ::Type{PrivateGroup})
-    InitRouter(api_group.db_api, "/private")
-    InitRouter(api_group.jwt_api, "/private")
-    InitRouter(api_group.base_api, "/private")
-    InitRouter(api_group.system_api, "/private")
-    # 初始化其他 API 路由...
-end
-
-function InitRouter(api_group::ExampleApiGroup, ::Type{PublicGroup})
-    InitRouter(api_group.customer_api, "/public")
-    InitRouter(api_group.file_upload_and_download_api, "/public")
-end
-
-function InitRouter(api_group::ExampleApiGroup, ::Type{PrivateGroup})
-    InitRouter(api_group.customer_api, "/private")
-    InitRouter(api_group.file_upload_and_download_api, "/private")
-end
-
-function InitRouter(api_group::ApiGroup)
-    InitRouter(api_group.system_api_group, ::Type{PublicGroup})
-    InitRouter(api_group.system_api_group, ::Type{PrivateGroup})
-    InitRouter(api_group.example_api_group, ::Type{PublicGroup})
-    InitRouter(api_group.example_api_group, ::Type{PrivateGroup})
-end
 
 end # module Ai4EJVA
